@@ -23,19 +23,50 @@
 				transform-origin: center;
 			}
 
-			.emote {
+			.emote{
 				width: 80px;
 				height: 80px;
 				font-size: 1.5vw;
 				overflow: hidden;
 				cursor: pointer;
+				margin-left: -3vw;
+				margin-top: -0.1vw;
+				transform-origin: center;	
+			}
+			
+			.emote img {
+				animation: fadeIn;
+				animation-duration: 1s;
+				animation-timing-function: linear;
+				animation-fill-mode: forwards;
+			}
+			
+			.emoteExplode {
 				animation: spinAway;
 				animation-duration: 5s;
 				animation-timing-function: linear;
 				animation-fill-mode: forwards;
-				margin-left: -3vw;
-				margin-top: -0.1vw;
-				transform-origin: center;
+			}
+
+			.emoteBounce1 {
+				animation: bounce1;
+				animation-timing-function: linear;
+				animation-fill-mode: forwards;
+			}
+			.emoteBounce2 {
+				animation: bounce2;
+				animation-timing-function: linear;
+				animation-fill-mode: forwards;
+			}
+			.emoteBounce3 {
+				animation: bounce3;
+				animation-timing-function: linear;
+				animation-fill-mode: forwards;
+			}
+			.emoteBounce4 {
+				animation: bounce4;
+				animation-timing-function: linear;
+				animation-fill-mode: forwards;
 			}
 
 			.emote img {
@@ -54,6 +85,39 @@
 				0% {transform: translateY(-10px) rotate(900deg) scale(1, 1); opacity: 1;}
 				50% {transform: translateY(800px) rotate(450deg) scale(4, 4); opacity: 0.7;}
 				100% {transform: translateY(2000px) rotate(0deg) scale(5, 5); opacity:0;} 
+			}	
+			
+			@keyframes fadeIn {
+				0% {opacity: 0;}
+				100% {opacity: 1;}
+			}	
+			
+			@keyframes bounce1 {
+				0% {transform: translateY(0px) scale(1, 1); opacity: 1;}
+				50% {transform: translateY(75%) scale(4, 4); opacity: 0.7;}
+				70% {opacity: 0.7;}
+				100% {transform: translateY(-50%) scale(3, 3); opacity: 0;} 
+			}	
+			
+			@keyframes bounce2 {
+				0% {transform: translateY(60%) scale(1, 1); opacity: 1;}
+				50% {transform: translateY(-45%) scale(4, 4); opacity: 0.7;}
+				70% {opacity: 0.7;}
+				100% {transform: translateY(0px) scale(3, 3); opacity: 0;} 
+			}
+			
+			@keyframes bounce3 {
+				0% {transform: translateY(20px) translateX(100%) scale(1, 1); opacity: 1;}
+				50% {transform: translateY(50%) translateX(500px) scale(4, 4); opacity: 0.6;}
+				70% {opacity: 0.4;}
+				100% {transform: translateY(-120%) scale(3, 3); opacity: 0;} 
+			}	
+			
+			@keyframes bounce4{
+				0% {transform: translateY(20px) translateX(-100%) scale(1, 1); opacity: 1;}
+				50% {transform: translateY(50%) translateX(-500px) scale(4, 4); opacity: 0.6;}
+				70% {opacity: 0.4;}
+				100% {transform: translateY(120%) scale(3, 3); opacity: 0;} 
 			}			
         </style>
     </head>
@@ -114,17 +178,28 @@
 						setTimeout(x=>spawner.remove(), 6000);
 						continue;
 					}
-					spawner.append("<div class='emoteSpawner' style='transform-origin: center; transform: rotate(" + getRandomInt(0, 360) + "deg)'><div class='emote'>" + emoteInnards + "</div></div>");
+					spawner.append("<div class='emoteSpawner' style='transform-origin: center; transform: rotate(" + getRandomInt(0, 360) + "deg)'><div class='emote emoteExplode'>" + emoteInnards + "</div></div>");
 					timesTriggered++;
 				}
 			}, 20);
+		}
+		
+		function bounceEmote(emoteInnards) {
+			var id = "e-" + getRandomInt(1, 100000)
+			$("body").append("<div id='" + id + "' class='emoteSpawnerBox' style='left: " + getRandomInt(20, 80) + "%; top: " + getRandomInt(20, 80) + "%;'></div>");
+			let spawner = $(`#${id}`);
+			
+			setTimeout(x=>spawner.remove(), 20000);
+
+			
+			spawner.append("<div class='emoteSpawner' style='transform-origin: center;'><div class='emote emoteBounce"+getRandomInt(1, 4)+"' style='animation-duration: "+getRandomInt(5,20)+"s;'>" + emoteInnards + "</div></div>");
 		}
 
 		// Called every time a message comes in
 		function onMessageHandler(target, context, msg, self) {
 			// Remove whitespace from chat message
 			const message = msg.trim();
-
+			
 			// If the command is known, let's execute it
 			if (message.startsWith("!e")) {
 				let userId = context["user-id"];
@@ -150,13 +225,96 @@
 				}
 				
 				if (emoteInnards) {
-					explodeEmote(emoteInnards, context["user-id"],amount);
+					explodeEmote(emoteInnards, context["user-id"], amount);
+				}
+			}
+			else 
+			{
+				//if we find an emoji, use that
+				if (emoteRegex.test(message)) {
+					let match = emoteRegex.exec(message);
+					if (match !== null) emoteInnards = match;
+				} 
+				
+				// else if we find a twitch emote, use that
+				if (context["emotes"]) {
+					var k = Object.keys(context["emotes"])
+					k.forEach((itr, index) => {
+						setTimeout(() => {
+							emoteInnards = "<img src=\"http://static-cdn.jtvnw.net/emoticons/v2/" + itr + "/default/dark/2.0\">";
+							bounceEmote(emoteInnards)
+						}, index * 200)
+					})
+					
+					return;
+				}
+				
+				if (digitRegex.test(message)) {
+					let digitsMatch = parseInt(digitRegex.exec(message));
+					if(digitsMatch !== NaN)
+					amount = digitsMatch;
+				}
+				
+				if (emoteInnards) {
+					bounceEmote(emoteInnards);
 				}
 			}
 		}
 
 		function onConnectedHandler(addr, port) {
 			console.log(`* Connected to ${addr}:${port}`);
+			onMessageHandler("#scruffyfox", {
+    "badge-info": {
+        "subscriber": "20"
+    },
+    "badges": {
+        "broadcaster": "1",
+        "subscriber": "18",
+        "glitchcon2020": "1"
+    },
+    "color": "#FF7185",
+    "display-name": "ScruffyFox",
+    "emote-only": true,
+    "emotes": {
+        "emotesv2_9019c46b79ef422e90835b2212c862b9": [
+            "69-79"
+        ],
+        "emotesv2_429c85b5f8cb4527bdc343294ed843a5": [
+            "81-93"
+        ],
+        "emotesv2_fcc72de734f4473caa72e42cc47cba57": [
+            "0-11"
+        ],
+        "emotesv2_3f29f1ac44094ce59407606e88d885bd": [
+            "13-25"
+        ],
+        "emotesv2_7bbcd9b1a9f6433d9f0246a55790b92c": [
+            "27-39"
+        ],
+        "emotesv2_572acd6da40749acae7baecbb66cc8c1": [
+            "41-53"
+        ],
+        "emotesv2_afe1430bbf9046c2bcc0ce5e459f16cd": [
+            "55-67"
+        ]
+    },
+    "first-msg": false,
+    "flags": null,
+    "id": "7768098a-7590-4599-b3af-ff9ff44dd18a",
+    "mod": false,
+    "returning-chatter": false,
+    "room-id": "22492043",
+    "subscriber": true,
+    "tmi-sent-ts": "1655495122951",
+    "turbo": false,
+    "user-id": "22492043",
+    "user-type": null,
+    "emotes-raw": "emotesv2_9019c46b79ef422e90835b2212c862b9:69-79/emotesv2_429c85b5f8cb4527bdc343294ed843a5:81-93/emotesv2_fcc72de734f4473caa72e42cc47cba57:0-11/emotesv2_3f29f1ac44094ce59407606e88d885bd:13-25/emotesv2_7bbcd9b1a9f6433d9f0246a55790b92c:27-39/emotesv2_572acd6da40749acae7baecbb66cc8c1:41-53/emotesv2_afe1430bbf9046c2bcc0ce5e459f16cd:55-67",
+    "badge-info-raw": "subscriber/20",
+    "badges-raw": "broadcaster/1,subscriber/18,glitchcon2020/1",
+    "username": "scruffyfox",
+    "message-type": "chat"
+}, "scruff72Love scruff72Music scruff72Peace scruff72Pride scruff72Round scruff72Thx scruff72Vibes ", false)
 		}
     </script>    
 </html>
