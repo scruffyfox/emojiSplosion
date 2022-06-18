@@ -240,10 +240,12 @@
 				if (context["emotes"]) {
 					var k = Object.keys(context["emotes"])
 					k.forEach((itr, index) => {
-						setTimeout(() => {
-							emoteInnards = "<img src=\"http://static-cdn.jtvnw.net/emoticons/v2/" + itr + "/default/dark/2.0\">";
-							bounceEmote(emoteInnards)
-						}, index * 200)
+						for (var i = 0; i < context["emotes"][itr].length; i++) {
+							setTimeout(() => {
+								emoteInnards = "<img src=\"http://static-cdn.jtvnw.net/emoticons/v2/" + itr + "/default/dark/2.0\">";
+								bounceEmote(emoteInnards)
+							}, index * 200)
+						}
 					})
 					
 					return;
