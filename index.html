@@ -199,11 +199,11 @@
 		function onMessageHandler(target, context, msg, self) {
 			// Remove whitespace from chat message
 			const message = msg.trim();
+			var emoteInnards;
 			
 			// If the command is known, let's execute it
 			if (message.startsWith("!e")) {
 				let userId = context["user-id"];
-				let emoteInnards;
 				let amount = 250;
 
 				//if we find an emoji, use that
